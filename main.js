@@ -37,6 +37,11 @@ const userContextProvider = (request) => {
 
 // Step 3 - Set up your Data Source Provider
 const dataSourceProvider = async (userContext, dataSource) => {
+  
+  if (dataSource instanceof reveal.RVWebResourceDataSource) {
+    dataSource.url = "https://excel2json.io/api/share/6e0f06b3-72d3-4fec-7984-08da43f56bb9";
+  }
+  
   if (dataSource instanceof reveal.RVRESTDataSource) {
     if (dataSource.id === "Invoices") {
       dataSource.url = `https://northwindcloud.azurewebsites.net/api/invoices/customer/${userContext.userId}`;
@@ -55,9 +60,17 @@ const dataSourceProvider = async (userContext, dataSource) => {
 
 // Step 4 - Set up your Data Source Item Provider
 const dataSourceItemProvider = async (userContext, dataSourceItem) => {
-  if (dataSourceItem instanceof reveal.RVJsonDataSourceItem && 
-        dataSourceItem.resourceItem instanceof reveal.RVRESTDataSourceItem) {
+
+  if (dataSourceItem instanceof reveal.RVJsonDataSourceItem && dataSourceItem.resourceItem instanceof reveal.RVWebResourceDataSourceItem) {
     await dataSourceProvider(userContext, dataSourceItem.resourceItem.dataSource);
+    dataSourceItem.resourceItem.url = dataSourceItem.resourceItem.dataSource.url; 
+    dataSourceItem.config = new reveal.RVJsonSchemaConfigBuilder()
+      .addNumericField("CategoryID")
+      .addStringField("CategoryName")
+      .addStringField("ProductName")
+      .addNumericField("ProductSales")
+      .build();
+
   } else {
     await dataSourceProvider(userContext, dataSourceItem.dataSource);
   }
